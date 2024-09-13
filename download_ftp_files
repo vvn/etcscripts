@@ -1,0 +1,44 @@
+# Load WinSCP .NET assembly
+Add-Type -Path "C:\Program Files (x86)\WinSCP\WinSCPnet.dll"
+
+# Set up session options
+$sessionOptions = New-Object WinSCP.SessionOptions
+$sessionOptions.Protocol = [WinSCP.Protocol]::Sftp
+$sessionOptions.HostName = "192.168.29.245"
+$sessionOptions.UserName = "root"
+$sessionOptions.Password = "s"
+$sessionOptions.GiveUpSecurityAndAcceptAnySshHostKey = $true
+
+# Define the remote directory and local directory for file downloads
+$remoteDirectory = "/root/files/"
+$localDirectory = "C:\sftpfiles\"
+
+# Initialize and open a new session
+$session = New-Object WinSCP.Session
+try {
+    # Connect to the server
+    $session.Open($sessionOptions)
+
+    # Download the files from the remote directory to the local directory
+    $transferOptions = New-Object WinSCP.TransferOptions
+    $transferOptions.TransferMode = [WinSCP.TransferMode]::Binary
+
+    # Perform the download
+    $transferResult = $session.GetFiles($remoteDirectory + "*", $localDirectory, $False, $transferOptions)
+    
+    # Throw if any error occurred
+    $transferResult.Check()
+
+    foreach ($transfer in $transferResult.Transfers) {
+        Write-Host "Download of $($transfer.FileName) succeeded"
+    }
+}
+catch [Exception] {
+    Write-Host "Error: $($_.Exception.Message)"
+}
+finally {
+    # Dispose of the session
+    $session.Dispose()
+}
+
+Write-Host "Script completed"
